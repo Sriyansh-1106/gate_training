@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GATE CSE 2027 Training Platform | Level 0 to Rank 1</title>
+  <meta name="description" content="Personal GATE CSE 2027 tutor, structured course, practice platform, authentic PYQ database, mock-test simulator, and progress tracker for students starting from Level 0 on October 1, 2026.">
+  
+  <!-- Modern Typography (Inter Font) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+
+  <!-- KaTeX for Mathematical Formula Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Left Navigation Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-badge">TARGET: GATE 2027</span>
+        <h1>GATE CSE Tutor</h1>
+      </div>
+
+      <div class="sidebar-nav-container">
+        <ul class="sidebar-nav-list" id="sidebar-nav-list">
+          <!-- Dynamically populated by js/app.js -->
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        <div>Prep Started: <strong>Oct 1, 2026</strong></div>
+        <div>Target Exam: <strong>Feb 2027</strong></div>
+      </div>
+    </aside>
+
+    <!-- Main Content Workspace -->
+    <div class="main-wrapper">
+      <!-- Top Navbar with Live Exam Countdown -->
+      <header class="top-navbar">
+        <div id="top-countdown-banner">
+          <!-- Live Countdown Banner -->
+        </div>
+
+        <div class="top-user-actions">
+          <span class="user-status-pill">Level 0 Aspirant</span>
+          <button class="btn btn-secondary btn-sm" onclick="window.router('admin')">⚙️ Content Studio</button>
+        </div>
+      </header>
+
+      <!-- Main Dynamic Viewport -->
+      <main class="app-viewport" id="app-content">
+        <!-- View Content Rendered Here by Router -->
+      </main>
+    </div>
+  </div>
+
+  <!-- AI Personal Tutor Floating Drawer -->
+  <div class="ai-tutor-drawer" id="ai-tutor-drawer">
+    <div class="tutor-header">
+      <div class="tutor-title-row">
+        <span>🤖</span>
+        <strong>AI GATE Personal Tutor</strong>
+      </div>
+      <button class="close-btn" id="close-tutor-btn">&times;</button>
+    </div>
+
+    <div class="tutor-messages" id="tutor-messages-body">
+      <div class="tutor-bubble bubble-tutor">
+        👋 Hi! I am your <strong>GATE CSE 2027 Personal Tutor</strong>.
+        <br><br>
+        Starting from Level 0? Don't worry! Ask me anything:
+        <br>
+        • <em>"Explain this like I'm a beginner"</em>
+        <br>
+        • <em>"Why is option C wrong?"</em>
+        <br>
+        • <em>"Test me on this concept"</em>
+      </div>
+    </div>
+
+    <!-- Quick Question Prompt Chips -->
+    <div class="tutor-quick-prompts">
+      <span class="tutor-chip" data-prompt="Explain recursion like I'm a beginner">Explain recursion</span>
+      <span class="tutor-chip" data-prompt="Why does Dijkstra fail on negative weights?">Dijkstra & Neg Weights</span>
+      <span class="tutor-chip" data-prompt="Give me a simple intuition for Pipelining hazards">Pipelining Hazards</span>
+      <span class="tutor-chip" data-prompt="Test me on this concept!">Test Me</span>
+    </div>
+
+    <div class="tutor-input-box">
+      <input type="text" id="tutor-chat-input" class="form-control" placeholder="Ask your GATE question or doubt..." />
+      <button class="btn btn-primary" id="tutor-send-btn">Ask</button>
+    </div>
+  </div>
+
+  <!-- AI Tutor FAB Toggle -->
+  <button class="tutor-fab" id="tutor-toggle-fab" title="Open AI GATE Tutor">
+    🤖
+  </button>
+
+  <!-- Main ES Module Application Script -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
