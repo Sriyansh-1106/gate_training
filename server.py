@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-GATE CSE 2027 Training Platform - Local Dev Server
-Serves the interactive portal and launches in your default browser.
+GATE CSE 2027 Training Platform - Dedicated Local Server
+Uses dedicated port 2027 (matching GATE 2027) to avoid any port conflicts
+with other localhost projects (e.g. interview training on 8080).
 """
 
 import http.server
@@ -10,40 +11,50 @@ import webbrowser
 import os
 import sys
 
-PORT = 8080
+# Ensure UTF-8 output encoding on Windows consoles
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
-class CustomHandler(http.server.SimpleHTTPRequestHandler):
+PREFERRED_PORTS = [2027, 2028, 2029, 8765, 0]
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+class GateServerHandler(http.server.SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        # Enforce serving strictly from Gate Prep directory
+        super().__init__(*args, directory=ROOT_DIR, **kwargs)
+
     def end_headers(self):
-        # Enable CORS and disable caching for smooth local development
+        # Anti-cache headers to prevent mixing assets with any other apps
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
         super().end_headers()
 
 def run_server():
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    handler = CustomHandler
+    os.chdir(ROOT_DIR)
     
-    # Try preferred port, fallback to alternatives if in use
-    for port in [8080, 8081, 3000, 5000, 0]:
+    for port in PREFERRED_PORTS:
         try:
-            with socketserver.TCPServer(("", port), handler) as httpd:
+            socketserver.TCPServer.allow_reuse_address = True
+            with socketserver.TCPServer(("", port), GateServerHandler) as httpd:
                 actual_port = httpd.server_address[1]
-                url = f"http://localhost:{actual_port}"
-                print("=" * 60)
-                print("  🚀 GATE CSE 2027 TRAINING PLATFORM")
-                print("  Target Exam: GATE 2027 (CSE & IT)")
-                print("  Start Date : October 1, 2026")
-                print(f"  Live Server: {url}")
-                print("=" * 60)
+                url = f"http://localhost:{actual_port}/index.html"
+                print("=" * 65)
+                print("   [+] GATE CSE 2027 INTERACTIVE TRAINING PLATFORM")
+                print("   Target Exam: GATE 2027 (CSE & IT) | Prep Start: Oct 1, 2026")
+                print(f"   Root Directory: {ROOT_DIR}")
+                print(f"   Dedicated Portal URL: {url}")
+                print("=" * 65)
                 print("Press Ctrl+C to stop the server.")
                 
-                # Launch browser automatically
+                # Automatically open browser
                 webbrowser.open(url)
                 httpd.serve_forever()
                 break
-        except OSError:
+        except OSError as e:
             if port == 0:
-                print("Failed to bind to any available port.")
+                print(f"Failed to bind server: {e}")
                 sys.exit(1)
             continue
 

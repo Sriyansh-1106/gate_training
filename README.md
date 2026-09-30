@@ -1,4 +1,4 @@
-# 🚀 GATE CSE 2027 Interactive Training Platform
+﻿# 🎯 GATE CSE 2027 Interactive Training Platform
 
 > **Target Exam:** GATE 2027 — Computer Science & Information Technology (CSE)  
 > **Preparation Start Date:** October 1, 2026  
@@ -8,7 +8,7 @@ An intelligent, interactive GATE CSE learning platform designed to guide an abso
 
 ---
 
-## 🎯 Primary Learning Cycle
+## 🔄 Primary Learning Cycle
 
 ```
 LEARN ➔ UNDERSTAND ➔ PRACTICE ➔ PYQs ➔ MOCK TEST ➔ ANALYZE ➔ REVISE
@@ -25,9 +25,14 @@ Every single topic follows a structured 7-step pedagogical ladder:
 
 ---
 
-## 🏆 Key Features
+## ⚡ Key Features
 
 - **GATE 2027 Real-Time Countdown:** Tracks days elapsed since October 1, 2026 and exact days remaining until GATE 2027.
+- **Hybrid AI Personal Tutor (Google Gemini + Offline KB):**
+  - **Dynamic Model Discovery:** Automatically queries and connects to the fastest available model (e.g., `gemini-2.0-flash`).
+  - **Socratic Guidance & Level Adaptation:** Explains concepts from Level 0 (intuitive analogies) up to Level 3 (advanced proofs & corner cases).
+  - **Zero-Config Shared Key:** Seamlessly shares your existing Gemini API key across projects.
+  - **Resilient Offline Fallback:** Full built-in knowledge base for instant answers, hints, and quiz prompts even without an API key or internet connection.
 - **4-Level Mastery System:**
   - **Level 0:** Absolute Beginner (analogies, what is this?, why does efficiency matter?)
   - **Level 1:** Foundation (definitions, standard formulas, mechanics)
@@ -46,7 +51,6 @@ Every single topic follows a structured 7-step pedagogical ladder:
   - Built-in **Official GATE Scientific Calculator** modal.
 - **Automatic GATE Error Notebook:** Collects every missed question for targeted spaced revision.
 - **GATE Formula & Theorem Book:** Categorized formulas with KaTeX mathematical rendering, variable definitions, and common traps.
-- **AI Personal Tutor:** Floating conversational tutor with beginner analogies, test-me prompts, and adaptive explanations.
 - **Spaced Repetition Engine:** Automatically schedules reviews at 1d, 3d, 7d, 14d, and 30d intervals.
 - **Admin Content Studio:** Add questions, formulas, and lessons with live preview and JSON backup export/import.
 
@@ -69,7 +73,7 @@ Or directly open `index.html` in any modern web browser.
 
 ---
 
-## 📂 Project Architecture
+## 📁 Project Architecture
 
 ```
 gate_training/
@@ -79,7 +83,7 @@ gate_training/
 ├── css/
 │   └── style.css              # Modern dark-mode responsive design system
 ├── js/
-│   ├── app.js                 # Central UI router and event controller
+│   ├── app.js                 # Central UI router, AI settings & event controller
 │   ├── data/
 │   │   ├── syllabus.js        # Complete 10-subject GATE CSE syllabus hierarchy
 │   │   ├── lessons.js         # 7-step pedagogical lessons database
@@ -90,7 +94,7 @@ gate_training/
 │       ├── storage.js         # LocalStorage persistence & JSON import/export
 │       ├── visualizers.js     # Sorting, BST, and Cache interactive simulators
 │       ├── examEngine.js      # Official GATE exam engine & virtual calculator
-│       ├── tutor.js           # AI Personal Tutor reasoning engine
+│       ├── tutor.js           # Hybrid Gemini AI + Offline KB Tutor Engine
 │       ├── analytics.js       # Heatmaps, streak, and countdown calculations
 │       └── admin.js           # Content creation and database management studio
 └── README.md
@@ -98,7 +102,7 @@ gate_training/
 
 ---
 
-## 📜 Complete Syllabus Coverage
+## 📚 Complete Syllabus Coverage
 
 1. **Engineering Mathematics** (Discrete Logic, Sets & Relations, Combinatorics, Graph Theory, Linear Algebra, Calculus, Probability)
 2. **Digital Logic** (Boolean Algebra, K-Maps, Combinational & Sequential Circuits, Number Representations)
@@ -113,8 +117,10 @@ gate_training/
 
 ---
 
-## 💻 Tech Stack
+## 🛠️ Tech Stack
 - **Frontend:** Vanilla HTML5, ES6 Modules, Modern CSS with Design Tokens
+- **AI Engine:** Google Gemini API (Dynamic discovery, Flash priority, Multi-turn context) + Offline Fallback
 - **Math Rendering:** KaTeX (LaTeX math expressions)
+- **Markdown:** Marked.js + Custom Regex fallback
 - **Local Server:** Python HTTP Server with fallback to direct browser launch
 - **Storage:** LocalStorage with JSON backup/restore

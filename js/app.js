@@ -1,4 +1,4 @@
-/**
+﻿/**
  * GATE CSE 2027 Training Platform - Core Application Controller
  * Handles Navigation, Views Rendering, Interactivity, Math Rendering, and State
  */
@@ -11,7 +11,7 @@ import { MOCK_TESTS_DATABASE } from "./data/mockTests.js";
 import { Storage } from "./modules/storage.js";
 import { Visualizers } from "./modules/visualizers.js";
 import { ExamEngine } from "./modules/examEngine.js";
-import { TutorEngine } from "./modules/tutor.js";
+import { TutorEngine, GeminiKeyManager, validateGeminiKey } from "./modules/tutor.js";
 import { Analytics } from "./modules/analytics.js";
 import { AdminStudio } from "./modules/admin.js";
 
@@ -25,7 +25,209 @@ export function initApp() {
   renderSidebar();
   renderTopNav();
   setupGlobalEvents();
+  updateAiStatusUI();
   navigateTo("dashboard");
+}
+
+export function renderFormattedContent(text) {
+  if (!text) return "";
+  if (window.marked && typeof window.marked.parse === "function") {
+    try {
+      return window.marked.parse(String(text));
+    } catch (e) {
+      console.warn("Marked parse error:", e);
+    }
+  }
+  let html = String(text)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\n\n/g, "<p></p>")
+    .replace(/\n/g, "<br>");
+  return html;
+}
+
+function updateAiStatusUI() {
+  const hasKey = GeminiKeyManager.hasKey();
+  const activeModel = GeminiKeyManager.getActiveModel();
+
+  const topPill = document.getElementById("top-ai-status-pill");
+  const topText = document.getElementById("top-ai-status-text");
+  if (topPill && topText) {
+    if (hasKey) {
+      topPill.className = "ai-status-pill active";
+      topText.textContent = `✨ AI Active (${activeModel})`;
+      topPill.title = `Gemini AI Connected (${activeModel}). Click to configure.`;
+    } else {
+      topPill.className = "ai-status-pill offline";
+      topText.textContent = "⚡ Offline Mode";
+      topPill.title = "Click to connect Gemini API Key";
+    }
+  }
+
+  const tutorBadge = document.getElementById("tutor-model-badge");
+  if (tutorBadge) {
+    if (hasKey) {
+      tutorBadge.className = "tutor-model-badge active";
+      tutorBadge.textContent = `AI: ${activeModel}`;
+    } else {
+      tutorBadge.className = "tutor-model-badge offline";
+      tutorBadge.textContent = "Offline Mode";
+    }
+  }
+}
+
+export function openApiKeyModal() {
+  const modal = document.getElementById("api-key-modal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  modal.style.display = "flex";
+
+  const keyInput = document.getElementById("gemini-api-key-input");
+  const currentKey = GeminiKeyManager.getKey();
+  if (keyInput) {
+    keyInput.value = currentKey;
+    keyInput.type = "password";
+  }
+
+  const feedback = document.getElementById("api-key-status-msg");
+  if (feedback) {
+    feedback.className = "api-status-feedback";
+    feedback.style.display = "none";
+    feedback.textContent = "";
+  }
+}
+
+export function closeApiKeyModal() {
+  const modal = document.getElementById("api-key-modal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.style.display = "none";
+}
+
+async function handleSaveApiKey() {
+  const keyInput = document.getElementById("gemini-api-key-input");
+  const saveBtn = document.getElementById("save-api-key-btn");
+  const spinner = document.getElementById("save-key-spinner");
+  const btnText = document.getElementById("save-key-text");
+  const feedback = document.getElementById("api-key-status-msg");
+
+  const key = keyInput ? keyInput.value.trim() : "";
+  if (!key) {
+    if (feedback) {
+      feedback.className = "api-status-feedback error";
+      feedback.style.display = "block";
+      feedback.textContent = "Please enter a valid Gemini API key.";
+    }
+    return;
+  }
+
+  if (saveBtn) saveBtn.disabled = true;
+  if (spinner) spinner.style.display = "inline-block";
+  if (btnText) btnText.textContent = "Validating...";
+
+  try {
+    const isValid = await validateGeminiKey(key);
+    if (isValid) {
+      GeminiKeyManager.saveKey(key);
+      const activeModel = GeminiKeyManager.getActiveModel();
+      updateAiStatusUI();
+      if (feedback) {
+        feedback.className = "api-status-feedback success";
+        feedback.style.display = "block";
+        feedback.textContent = `✅ Successfully connected to Gemini! Active model: ${activeModel}`;
+      }
+      setTimeout(() => {
+        closeApiKeyModal();
+      }, 1200);
+    } else {
+      if (feedback) {
+        feedback.className = "api-status-feedback error";
+        feedback.style.display = "block";
+        feedback.textContent = "❌ Invalid API key or model unreachable. Please verify your Google AI Studio key.";
+      }
+    }
+  } catch (err) {
+    if (feedback) {
+      feedback.className = "api-status-feedback error";
+      feedback.style.display = "block";
+      feedback.textContent = `❌ Error: ${err.message}`;
+    }
+  } finally {
+    if (saveBtn) saveBtn.disabled = false;
+    if (spinner) spinner.style.display = "none";
+    if (btnText) btnText.textContent = "Validate & Save";
+  }
+}
+
+function handleClearApiKey() {
+  GeminiKeyManager.clearKey();
+  const keyInput = document.getElementById("gemini-api-key-input");
+  if (keyInput) keyInput.value = "";
+  const feedback = document.getElementById("api-key-status-msg");
+  if (feedback) {
+    feedback.className = "api-status-feedback success";
+    feedback.style.display = "block";
+    feedback.textContent = "API key removed. Running in offline knowledge base mode.";
+  }
+  updateAiStatusUI();
+  setTimeout(() => {
+    closeApiKeyModal();
+  }, 900);
+}
+
+function showTutorTyping() {
+  const container = document.getElementById("tutor-messages-body");
+  if (!container) return null;
+  const existing = document.getElementById("tutor-typing-indicator");
+  if (existing) return existing;
+  const typingDiv = document.createElement("div");
+  typingDiv.className = "tutor-bubble bubble-tutor typing";
+  typingDiv.id = "tutor-typing-indicator";
+  typingDiv.innerHTML = `
+    <span class="typing-dot"></span>
+    <span class="typing-dot"></span>
+    <span class="typing-dot"></span>
+    <span class="typing-label">Tutor is thinking...</span>
+  `;
+  container.appendChild(typingDiv);
+  container.scrollTop = container.scrollHeight;
+  return typingDiv;
+}
+
+function removeTutorTyping() {
+  const el = document.getElementById("tutor-typing-indicator");
+  if (el) el.remove();
+}
+
+function appendTutorMessage(sender, content, meta = {}) {
+  const container = document.getElementById("tutor-messages-body");
+  if (!container) return;
+  const msgDiv = document.createElement("div");
+  msgDiv.className = `tutor-bubble bubble-${sender}`;
+
+  if (sender === "user") {
+    const raw = typeof content === "string" ? content : (content.text || "");
+    msgDiv.textContent = raw;
+  } else {
+    const rawText = typeof content === "string" ? content : (content.text || "");
+    const formatted = renderFormattedContent(rawText);
+    const metaSource = (typeof content === "object" && content.source) || meta.source || (GeminiKeyManager.hasKey() ? "ai" : "offline");
+    const metaModel = (typeof content === "object" && content.model) || meta.model || GeminiKeyManager.getActiveModel();
+
+    let metaBadge = "";
+    if (metaSource === "ai") {
+      metaBadge = `<div class="bubble-meta meta-ai">✨ Powered by <strong>${metaModel}</strong></div>`;
+    } else {
+      metaBadge = `<div class="bubble-meta">⚡ Offline Knowledge Base</div>`;
+    }
+    msgDiv.innerHTML = formatted + metaBadge;
+  }
+
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+  renderKaTeX(msgDiv);
 }
 
 function setupGlobalEvents() {
@@ -36,6 +238,37 @@ function setupGlobalEvents() {
     currentLessonLevel = level;
     navigateTo("learn");
   };
+
+  window.openApiKeyModal = openApiKeyModal;
+  window.closeApiKeyModal = closeApiKeyModal;
+
+  const topPill = document.getElementById("top-ai-status-pill");
+  if (topPill) topPill.onclick = openApiKeyModal;
+
+  const tutorSettingsBtn = document.getElementById("tutor-settings-btn");
+  if (tutorSettingsBtn) tutorSettingsBtn.onclick = openApiKeyModal;
+
+  const closeKeyModal = document.getElementById("close-api-key-modal-btn");
+  if (closeKeyModal) closeKeyModal.onclick = closeApiKeyModal;
+
+  const cancelKeyBtn = document.getElementById("cancel-api-key-btn");
+  if (cancelKeyBtn) cancelKeyBtn.onclick = closeApiKeyModal;
+
+  const saveKeyBtn = document.getElementById("save-api-key-btn");
+  if (saveKeyBtn) saveKeyBtn.onclick = handleSaveApiKey;
+
+  const clearKeyBtn = document.getElementById("clear-api-key-btn");
+  if (clearKeyBtn) clearKeyBtn.onclick = handleClearApiKey;
+
+  const toggleKeyVisibilityBtn = document.getElementById("toggle-key-visibility-btn");
+  if (toggleKeyVisibilityBtn) {
+    toggleKeyVisibilityBtn.onclick = () => {
+      const keyInput = document.getElementById("gemini-api-key-input");
+      if (keyInput) {
+        keyInput.type = keyInput.type === "password" ? "text" : "password";
+      }
+    };
+  }
 
   // Close AI Tutor Modal
   const closeTutor = document.getElementById("close-tutor-btn");
@@ -56,16 +289,30 @@ function setupGlobalEvents() {
   const tutorSend = document.getElementById("tutor-send-btn");
   const tutorInput = document.getElementById("tutor-chat-input");
   if (tutorSend && tutorInput) {
-    const handleSend = () => {
+    const handleSend = async () => {
       const msg = tutorInput.value.trim();
       if (!msg) return;
       appendTutorMessage("user", msg);
       tutorInput.value = "";
+      tutorInput.disabled = true;
+      tutorSend.disabled = true;
+      showTutorTyping();
 
-      setTimeout(() => {
-        const reply = TutorEngine.generateResponse(msg, currentLessonLevel, currentLessonTopicId);
+      try {
+        const reply = await TutorEngine.generateResponse(msg, currentLessonLevel, currentLessonTopicId);
+        removeTutorTyping();
         appendTutorMessage("tutor", reply);
-      }, 400);
+      } catch (err) {
+        removeTutorTyping();
+        appendTutorMessage("tutor", {
+          text: `⚠️ **Connection Error:** Could not reach the AI tutor (${err.message}). Falling back to offline knowledge base.`,
+          source: "offline"
+        });
+      } finally {
+        tutorInput.disabled = false;
+        tutorSend.disabled = false;
+        tutorInput.focus();
+      }
     };
 
     tutorSend.onclick = handleSend;
@@ -86,27 +333,16 @@ function setupGlobalEvents() {
   });
 }
 
-function appendTutorMessage(sender, text) {
-  const container = document.getElementById("tutor-messages-body");
-  if (!container) return;
-  const msgDiv = document.createElement("div");
-  msgDiv.className = `tutor-bubble bubble-${sender}`;
-  msgDiv.innerHTML = text.replace(/\n/g, "<br>");
-  container.appendChild(msgDiv);
-  container.scrollTop = container.scrollHeight;
-  renderKaTeX(msgDiv);
-}
-
 function renderSidebar() {
   const navList = [
     { id: "dashboard", label: "Dashboard", icon: "📊" },
     { id: "roadmap", label: "Roadmap 2027", icon: "🗺️" },
-    { id: "learn", label: "Learn Concepts", icon: "📖" },
-    { id: "pyqs", label: "GATE PYQs", icon: "📝" },
-    { id: "mockTests", label: "Mock Tests", icon: "🎯" },
+    { id: "learn", label: "Learn Concepts", icon: "📚" },
+    { id: "pyqs", label: "GATE PYQs", icon: "🎯" },
+    { id: "mockTests", label: "Mock Tests", icon: "🧪" },
     { id: "revision", label: "Revision System", icon: "🔄" },
     { id: "errorBook", label: "Error Notebook", icon: "📓" },
-    { id: "formulaBook", label: "Formula Book", icon: "🧮" },
+    { id: "formulaBook", label: "Formula Book", icon: "📖" },
     { id: "analytics", label: "Analytics", icon: "📈" },
     { id: "admin", label: "Content Studio", icon: "⚙️" }
   ];
@@ -545,7 +781,7 @@ function renderCurrentStep(levelData) {
       <h3>${stepItem.title}</h3>
     </div>
     <div class="step-body-text">
-      ${stepItem.content ? stepItem.content.replace(/\n/g, "<br>") : ''}
+      ${stepItem.content ? renderFormattedContent(stepItem.content) : ''}
     </div>
   `;
 
@@ -896,7 +1132,7 @@ function renderPyqExplanationContent(q, attempt) {
 
     <div class="sol-details">
       <h5>Step-by-Step Official Solution:</h5>
-      <p>${q.explanation.stepByStep.replace(/\n/g, "<br>")}</p>
+      <p>${renderFormattedContent(q.explanation.stepByStep)}</p>
       
       <h5>Concept Tested:</h5>
       <p><strong>${q.explanation.conceptTested}</strong></p>
