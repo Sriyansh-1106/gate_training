@@ -1,38 +1,48 @@
 @echo off
-title GATE CSE 2027 Training Platform
-cls
-echo ======================================================================
-echo           GATE CSE 2027 - INTERACTIVE TRAINING PLATFORM
-echo                     Level 0 to Rank 1 Journey
-echo                Preparation Start: October 1, 2026
-echo             Dedicated Port: http://localhost:2027
-echo ======================================================================
-echo.
+title GATE CSE 2027 Training Platform - Launcher
+color 0B
 
 cd /d "%~dp0"
 
-:: Check if port 2027 has an old instance and free it
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":2027" ^| findstr "LISTENING"') do (
-    taskkill /F /PID %%a >nul 2>&1
-)
+echo.
+echo ============================================================
+echo   GATE CSE 2027 - INTERACTIVE TRAINING PLATFORM
+echo   Target: GATE 2027 (CSE) ^| Start: October 1, 2026
+echo   Dedicated Port: 2027
+echo ============================================================
+echo.
 
-:: Check if Python is installed
-where python >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    echo [*] Starting GATE CSE 2027 Local Web Server (Port 2027)...
+REM Check if Python is available
+python --version >nul 2>&1
+IF %ERRORLEVEL% EQU 0 (
+    echo [OK] Python found.
+    echo [OK] Launching http://localhost:2027/index.html in your browser...
+    start "" "http://localhost:2027/index.html"
     python server.py
     goto end
 )
 
-where py >nul 2>nul
-if %ERRORLEVEL% equ 0 (
-    echo [*] Starting GATE CSE 2027 (py launcher) Local Server (Port 2027)...
+python3 --version >nul 2>&1
+IF %ERRORLEVEL% EQU 0 (
+    echo [OK] Python3 found.
+    echo [OK] Launching http://localhost:2027/index.html in your browser...
+    start "" "http://localhost:2027/index.html"
+    python3 server.py
+    goto end
+)
+
+py --version >nul 2>&1
+IF %ERRORLEVEL% EQU 0 (
+    echo [OK] Python (py launcher) found.
+    echo [OK] Launching http://localhost:2027/index.html in your browser...
+    start "" "http://localhost:2027/index.html"
     py server.py
     goto end
 )
 
-echo [!] Python not found in PATH.
-echo [*] Opening GATE CSE 2027 directly in your default browser...
+REM Fallback if Python is not found at all
+echo [WARN] Python not found in system PATH.
+echo [WARN] Opening index.html directly in your default browser...
 start "" "%~dp0index.html"
 
 :end
